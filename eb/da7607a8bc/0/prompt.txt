@@ -1,0 +1,13 @@
+did you upload the session log to the same fork?
+
+---
+
+Please push the session log as well
+
+---
+
+Is entire.io installed and are you using it?
+
+---
+
+[Image #3] Ray is saying that my submission only has the "main" branch but not the session log branch below as shown in another user's submission that has both. Do you know why that is and can you push my session log to the fork as well?
