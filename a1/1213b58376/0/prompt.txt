@@ -1,0 +1,29 @@
+Run entire session current and entire session list
+
+---
+
+ok
+
+---
+
+check .entire/logs/entire.log for a new line from that event: tail -5 .entire/logs/entire.log or similar
+
+---
+
+run git status --short
+
+---
+
+I would like to fix to fix export_csv_url()
+
+---
+
+I passed http://localhost:9999/my-local-fixture/d/FAKE_TEST_ID but only the FAKE_TEST_ID part after /d/ was extracted and went to https://docs.google.com/spreadsheets/d/FAKE_TEST_ID/export?format=csv. It removed localhost:9999 and /my-local-fixture/ entirely.
+
+---
+
+I'd like to set up a local fixture to test the two untestable paths before: bad-status transaction row and a role-mismatch sheet. The amount-must-be-non-blank subtlety for the bad-status case and that the role-mismatch case needs a CSV with the wrong columns, no special row is needed.
+
+---
+
+__pycache__ is still showing as untracked

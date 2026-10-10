@@ -1,0 +1,29 @@
+{
+  "cli_version": "0.10.2",
+  "checkpoint_id": "a11213b58376",
+  "strategy": "manual-commit",
+  "branch": "main",
+  "checkpoints_count": 8,
+  "files_touched": [
+    ".gitignore",
+    "daily-financial-health-brief/scripts/generate_brief.py",
+    "daily-financial-health-brief/tests/fixture_server.py",
+    "daily-financial-health-brief/tests/test_untestable_paths.py"
+  ],
+  "sessions": [
+    {
+      "metadata": "/a1/1213b58376/0/metadata.json",
+      "transcript": "/a1/1213b58376/0/full.jsonl",
+      "compact_transcript": "/a1/1213b58376/0/transcript.jsonl",
+      "content_hash": "/a1/1213b58376/0/content_hash.txt",
+      "prompt": "/a1/1213b58376/0/prompt.txt"
+    }
+  ],
+  "token_usage": {
+    "input_tokens": 84,
+    "cache_creation_tokens": 111038,
+    "cache_read_tokens": 3430650,
+    "output_tokens": 21013,
+    "api_call_count": 42
+  }
+}
