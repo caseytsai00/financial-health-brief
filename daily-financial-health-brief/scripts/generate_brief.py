@@ -65,12 +65,12 @@ class SafeFailure(RuntimeError):
 # --------------------------------------------------------------------------
 
 def export_csv_url(sheet_url: str) -> tuple[str, str]:
-    match = re.search(r"/d/([a-zA-Z0-9_-]+)", sheet_url)
+    match = re.search(r".*?/d/([a-zA-Z0-9_-]+)", sheet_url)
     if not match:
         raise SafeFailure(f"Could not parse a spreadsheet ID out of URL: {sheet_url}")
-    sheet_id = match.group(1)
+    base, sheet_id = match.group(0), match.group(1)
     gid_match = re.search(r"[?&#]gid=([0-9]+)", sheet_url)
-    url = f"https://docs.google.com/spreadsheets/d/{sheet_id}/export?format=csv"
+    url = f"{base}/export?format=csv"
     if gid_match:
         url += f"&gid={gid_match.group(1)}"
     return url, sheet_id
