@@ -101,6 +101,28 @@ untouched) when:
 - A target-date transaction's `status` isn't one of `posted` / `pending` /
   `disputed` (needs manual categorization before the run can continue).
 
+### Testing safe-failure paths
+
+Two of the safe-failure checks above are hard to exercise against the real
+sheets, so `tests/` covers them against a local HTTP fixture server instead
+(`tests/fixture_server.py`) — no real sheet access or network needed:
+
+- **Bad-status row with a valid amount** — a transaction with a non-blank,
+  parseable `amount` but a `status` outside `posted`/`pending`/`disputed`
+  must raise `SafeFailure`. The amount has to be non-blank: a blank/
+  unparseable amount routes the row to `unknown_amount` *before* the status
+  is ever checked, so a blank-amount version of the same bad status is
+  included as a sanity check that must **not** raise.
+- **Role-mismatch header** — a sheet whose header doesn't fingerprint to
+  any of transactions/budget/revenue must raise `SafeFailure`. No special
+  row is needed; the header alone decides this.
+
+Run from `daily-financial-health-brief/`:
+
+```
+python3 -m unittest tests.test_untestable_paths -v
+```
+
 Business rules for what counts as a "material" variance, how unknown
 amounts and negative values are handled, and which decisions came directly
 from the Finance and Operations Manager are in
