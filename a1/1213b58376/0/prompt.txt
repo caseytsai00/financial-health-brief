@@ -27,3 +27,7 @@ I'd like to set up a local fixture to test the two untestable paths before: bad-
 ---
 
 __pycache__ is still showing as untracked
+
+---
+
+I also want to committ tests/ as a real part of the deliverable because since the verification already happened, committing it  is what solidifies that into evidence that can be reviewed
