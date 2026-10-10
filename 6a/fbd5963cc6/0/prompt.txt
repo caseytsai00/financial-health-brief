@@ -41,3 +41,7 @@ Show me the diff
 add a short section to SKILL.md, near "Validation and safe-failure behavior," covering what the two tests check (bad-status
   row with a valid amount, and role-mismatch header), the fact that it uses a local fixture server so no real sheet access is needed, and the exact run
   command python3 -m unittest tests.test_untestable_paths -v from daily-financial-health-brief/.
+
+---
+
+Go ahead and commit the SKILL.md documentation addition as its own commit separate from the fix commit.
