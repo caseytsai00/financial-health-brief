@@ -36,6 +36,33 @@ requested.
   which is a "Missing Source of Truth" failure because the whole brief is
   about that date.
 
+## Collected revenue vs. outstanding balance
+
+- "Collected revenue against outstanding balances" means two **independent**
+  as-of comparisons — `collected_revenue` target-date vs. comparison-date,
+  and separately `outstanding_balance` target-date vs. comparison-date —
+  the same two-date, signed-change structure as the Daily Posted Total
+  Comparison above, just applied to these two Revenue Snapshot metrics.
+  They are explicitly **not** combined into any single relationship or
+  ratio between the two metrics (e.g. no "collection rate").
+- The Revenue Snapshot does not get a row for every calendar day by
+  design — unlike the Transaction Ledger, it updates sparsely (in the
+  August 2026 data, 5 of 9 days in the observed window have a row at all).
+  A missing same-day entry for `--target-date` or `--comparison-date` is
+  therefore an **expected** characteristic of this sheet, not an error.
+- When the exact date has no row, the script falls back to the most
+  recent **real** observation on or before that date, and labels the
+  output with that observation's own date. This is explicitly **not** the
+  same as the "never assume zero for an unknown amount" rule below: one is
+  a real, if slightly stale, number; the other has no factual basis at
+  all. Falling back to a labeled real value is safe; inventing a number
+  (including zero) is not.
+- If there is no observation at all on or before the requested date (it
+  predates the Revenue Snapshot's first row), that date's value — and the
+  signed change that depends on it — is flagged as unavailable rather than
+  failing the run, consistent with how a zero-row `--comparison-date`
+  is handled for Posted cash.
+
 ## Unknown or blank amounts
 
 - A transaction with a blank/unparseable `amount` keeps its status for

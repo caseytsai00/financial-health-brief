@@ -275,6 +275,58 @@ def build_posted_comparison(
     }
 
 
+REVENUE_COMPARISON_METRICS = ("collected_revenue", "outstanding_balance")
+
+
+def most_recent_revenue_observation(
+    revenue_rows: list[dict], metric: str, as_of_date: dt.date
+) -> tuple[dt.date, Decimal] | None:
+    """The most recent real Revenue Snapshot value for `metric` on or before
+    as_of_date. The Revenue Snapshot updates sparsely by design -- it does
+    not get a row for every day the way the Transaction Ledger does -- so
+    falling back to the most recent real observation, clearly labeled with
+    its own date, is not the same as assuming zero for an unknown amount:
+    one is a real (if slightly stale) number, the other has no factual
+    basis at all. Returns None if there's no observation at or before
+    as_of_date (e.g. the date predates the Revenue Snapshot's first row)."""
+    as_of_str = as_of_date.isoformat()
+    candidates = [
+        (row["date"], parse_amount(row["value"]))
+        for row in revenue_rows
+        if row["metric"] == metric and row["date"] <= as_of_str
+    ]
+    candidates = [(date_str, value) for date_str, value in candidates if value is not None]
+    if not candidates:
+        return None
+    best_date_str, best_value = max(candidates, key=lambda item: item[0])
+    return dt.date.fromisoformat(best_date_str), best_value
+
+
+def build_revenue_comparison(
+    revenue_rows: list[dict], target_date: dt.date, comparison_date: dt.date
+) -> dict:
+    """Two independent as-of comparisons -- collected_revenue and
+    outstanding_balance -- each target-date vs. comparison-date, exactly
+    like build_posted_comparison() but for the Revenue Snapshot. These are
+    never combined into a single relationship or ratio between the two
+    metrics; each is reported on its own."""
+    result = {}
+    for metric in REVENUE_COMPARISON_METRICS:
+        target_obs = most_recent_revenue_observation(revenue_rows, metric, target_date)
+        comparison_obs = most_recent_revenue_observation(revenue_rows, metric, comparison_date)
+        signed_change = (
+            target_obs[1] - comparison_obs[1] if target_obs and comparison_obs else None
+        )
+        result[metric] = {
+            "target_as_of": target_obs[0] if target_obs else None,
+            "target_value": target_obs[1] if target_obs else None,
+            "comparison_as_of": comparison_obs[0] if comparison_obs else None,
+            "comparison_value": comparison_obs[1] if comparison_obs else None,
+            "signed_change": signed_change,
+        }
+    return result
+
+
 def build_budget_variances(all_transactions: list[dict], budget_rows: list[dict], target_date: dt.date) -> dict:
     month_prefix = target_date.strftime("%Y-%m")
     target_str = target_date.isoformat()
@@ -362,10 +414,22 @@ def fmt_pct(value: Decimal | None) -> str:
     return "n/a" if value is None else f"{value:.2f}%"
 
 
+def fmt_revenue_observation(label: str, requested_date: dt.date, as_of_date: dt.date | None, value: Decimal | None) -> str:
+    if as_of_date is None:
+        return f"- **{label} ({requested_date.isoformat()}):** no data available on or before this date"
+    if as_of_date == requested_date:
+        return f"- **{label} ({requested_date.isoformat()}):** {fmt_usd(value)}"
+    return (
+        f"- **{label} ({requested_date.isoformat()}):** {fmt_usd(value)} "
+        f"(no entry for this date; most recent real observation is as of {as_of_date.isoformat()})"
+    )
+
+
 def render_report(
     target_date: dt.date,
     cash_summary: dict,
     posted_comparison: dict,
+    revenue_comparison: dict,
     variances: list[dict],
     orphan_categories: list[dict],
     unresolved: dict,
@@ -410,6 +474,32 @@ def render_report(
             "(zero Transaction Ledger rows for this date)"
         )
     lines.append("")
+
+    lines.append("## Collected Revenue vs. Outstanding Balance (as-of comparison)")
+    lines.append(
+        "Each metric below is compared target-date vs. comparison-date "
+        "independently -- never combined into a single relationship or "
+        "ratio between collected revenue and outstanding balance."
+    )
+    lines.append("")
+    for metric, title in (
+        ("collected_revenue", "Collected Revenue"),
+        ("outstanding_balance", "Outstanding Balance"),
+    ):
+        comp = revenue_comparison[metric]
+        lines.append(f"**{title}**")
+        lines.append(
+            fmt_revenue_observation(title, target_date, comp["target_as_of"], comp["target_value"])
+        )
+        lines.append(
+            fmt_revenue_observation(title, comparison_date, comp["comparison_as_of"], comp["comparison_value"])
+        )
+        if comp["signed_change"] is not None:
+            sign = "+" if comp["signed_change"] >= 0 else ""
+            lines.append(f"- **Signed Change:** {sign}{fmt_usd(comp['signed_change'])}")
+        else:
+            lines.append("- **Signed Change:** n/a (no data available for one or both dates)")
+        lines.append("")
 
     lines.append("## Material Budget Variances (MTD posted spend vs. monthly budget)")
     material = [v for v in variances if v["material"]]
@@ -642,6 +732,7 @@ def main(argv: list[str] | None = None) -> int:
         posted_comparison = build_posted_comparison(
             transactions, cash_summary["totals"]["posted"], comparison_date
         )
+        revenue_comparison = build_revenue_comparison(revenue, target_date, comparison_date)
         budget_result = build_budget_variances(transactions, budget, target_date)
         variances = budget_result["variances"]
         orphan_categories = budget_result["orphan_categories"]
@@ -654,8 +745,8 @@ def main(argv: list[str] | None = None) -> int:
 
         generated_at = dt.datetime.now(dt.timezone.utc).isoformat(timespec="seconds") + "Z"
         report = render_report(
-            target_date, cash_summary, posted_comparison, variances, orphan_categories,
-            unresolved, fetched, generated_at
+            target_date, cash_summary, posted_comparison, revenue_comparison, variances,
+            orphan_categories, unresolved, fetched, generated_at
         )
         with open(f"{out_dir}/report.md", "w", encoding="utf-8") as handle:
             handle.write(report)

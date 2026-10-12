@@ -80,11 +80,12 @@ wall-clock-dependent values baked into the numbers).
 - `deliverables/normalized/revenue.csv` — every Revenue Snapshot row, columns:
   `date, source, metric, value, currency, source_version`.
 - `deliverables/report.md` — the daily brief: Cash Summary, Daily Posted
-  Total Comparison (target vs. comparison date, signed change), Material
-  Budget Variances, Unbudgeted MTD Spend, Unresolved Items Queue, source
-  fetch evidence (URL, spreadsheet ID, tab, fetch timestamp, source_version,
-  row count per sheet), business-rule notes, and a self-checking
-  Definition-of-Done gate.
+  Total Comparison (target vs. comparison date, signed change), Collected
+  Revenue vs. Outstanding Balance (two independent as-of comparisons —
+  never combined into a ratio), Material Budget Variances, Unbudgeted MTD
+  Spend, Unresolved Items Queue, source fetch evidence (URL, spreadsheet
+  ID, tab, fetch timestamp, source_version, row count per sheet),
+  business-rule notes, and a self-checking Definition-of-Done gate.
 
 Fetch evidence (URL / spreadsheet ID / tab / timestamp / source_version /
 row count for each of the three sheets) is also printed to stderr *before*
@@ -113,7 +114,13 @@ untouched) when:
 A `--comparison-date` with **zero** Transaction Ledger rows is different:
 it doesn't fail the run, since it doesn't corrupt anything else in the
 report — it's flagged as "no comparison data available" in the Daily
-Posted Total Comparison section instead.
+Posted Total Comparison section instead. The same non-failing treatment
+applies to `collected_revenue` / `outstanding_balance` when neither
+`--target-date` nor `--comparison-date` has a Revenue Snapshot row on or
+before it — except there, a missing exact-date row first tries falling
+back to the most recent earlier real observation (labeled with its own
+date) before being flagged unavailable; see
+[`references/business-rules.md`](references/business-rules.md).
 
 ### Testing safe-failure paths
 
@@ -143,6 +150,12 @@ direct unit tests of the business-logic functions:
   missing `--comparison-date` must raise `SafeFailure` end-to-end; a
   comparison date with zero rows must be flagged, not failed; the signed
   change must be `target − comparison` in both directions.
+- **Collected revenue vs. outstanding balance** (`test_revenue_comparison.py`)
+  — an exact-date row is used directly; a missing date falls back to the
+  most recent earlier real observation, labeled with its own date, and the
+  signed change still computes from that fallback; a date before the
+  earliest Revenue Snapshot row has no fallback and is flagged unavailable,
+  not failed; the two metrics are always reported independently.
 
 Run from `daily-financial-health-brief/`:
 
