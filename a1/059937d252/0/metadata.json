@@ -1,0 +1,56 @@
+{
+  "cli_version": "0.10.2",
+  "checkpoint_id": "a1059937d252",
+  "session_id": "aa810533-b10a-47e5-b439-3b08d14bb6c5",
+  "strategy": "manual-commit",
+  "created_at": "2026-10-12T19:41:49.662222Z",
+  "branch": "main",
+  "checkpoints_count": 2,
+  "files_touched": [
+    "daily-financial-health-brief/SKILL.md",
+    "daily-financial-health-brief/references/business-rules.md",
+    "daily-financial-health-brief/scripts/generate_brief.py",
+    "daily-financial-health-brief/tests/test_posted_comparison.py",
+    "daily-financial-health-brief/tests/test_untestable_paths.py"
+  ],
+  "agent": "Claude Code",
+  "model": "claude-sonnet-5",
+  "turn_id": "903b3244b54d",
+  "checkpoint_transcript_start": 660,
+  "transcript_lines_at_start": 660,
+  "compact_transcript_start": 143,
+  "token_usage": {
+    "input_tokens": 84,
+    "cache_creation_tokens": 179974,
+    "cache_read_tokens": 8068260,
+    "output_tokens": 25334,
+    "api_call_count": 42
+  },
+  "session_metrics": {
+    "turn_count": 28
+  },
+  "initial_attribution": {
+    "calculated_at": "2026-10-12T19:41:49.618252Z",
+    "agent_lines": 292,
+    "agent_removed": 19,
+    "human_added": 9,
+    "human_modified": 0,
+    "human_removed": 0,
+    "total_committed": 301,
+    "total_lines_changed": 324,
+    "agent_percentage": 95.98765432098766,
+    "metric_version": 2
+  },
+  "prompt_attributions": [
+    {
+      "checkpoint_number": 1,
+      "user_lines_added": 84,
+      "user_lines_removed": 0,
+      "agent_lines_added": 0,
+      "agent_lines_removed": 0,
+      "user_added_per_file": {
+        ".claude/settings.json": 84
+      }
+    }
+  ]
+}

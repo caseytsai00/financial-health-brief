@@ -1,0 +1,5 @@
+push it
+
+---
+
+the Leaderboard tab's challenge description requires "daily posted totals and their signed change" compared against a "comparison date" — e.g., reporting date Aug 11 vs. comparison Aug 10. Nothing in the current code implements this at all. I went back to the Work Sim interview and asked why the exact dates matter, and learned that the manager "strictly" uses the dates specified in each request for financial consistency and alignment with the review period. --comparison-date should be a required explicit argument with no silent default — fail safely if it's missing, same pattern as a missing source. And if the comparison date has zero transactions, that's safe to flag ("no comparison data available") rather than fail the whole run, since it doesn't corrupt anything else in the report.
