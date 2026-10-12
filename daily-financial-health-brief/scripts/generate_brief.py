@@ -185,6 +185,17 @@ def parse_amount(raw: str | None) -> Decimal | None:
         return None
 
 
+def has_amount_status_mismatch(txn: dict) -> bool:
+    """True when the source's own `amount_status` column disagrees with
+    whether `amount` actually parses (e.g. the sheet says "unknown" but the
+    amount parses fine, or vice versa). Either signal alone could be the
+    wrong one, so a disagreement is never resolved by silently trusting
+    one side -- it's treated as unknown, same as a blank amount."""
+    parsed = parse_amount(txn.get("amount"))
+    declared_unknown = (txn.get("amount_status") or "").strip().lower() == "unknown"
+    return (parsed is None) != declared_unknown
+
+
 def normalize_rows(rows: list[dict], fields: list[str]) -> list[dict]:
     normalized = []
     for row in rows:
@@ -218,8 +229,10 @@ def build_cash_summary(day_transactions: list[dict]) -> dict:
     for txn in day_transactions:
         status = (txn["status"] or "").strip().lower()
         amount = parse_amount(txn["amount"])
-        if amount is None:
-            unknown_amount.append(txn)
+        mismatch = has_amount_status_mismatch(txn)
+        if amount is None or mismatch:
+            reason = "amount_status mismatch" if mismatch else "amount blank"
+            unknown_amount.append((txn, reason))
             continue
         if status not in CASH_STATUSES:
             raise SafeFailure(
@@ -233,7 +246,7 @@ def build_cash_summary(day_transactions: list[dict]) -> dict:
     return {"buckets": buckets, "totals": totals, "unknown_amount": unknown_amount}
 
 
-def build_budget_variances(all_transactions: list[dict], budget_rows: list[dict], target_date: dt.date) -> list[dict]:
+def build_budget_variances(all_transactions: list[dict], budget_rows: list[dict], target_date: dt.date) -> dict:
     month_prefix = target_date.strftime("%Y-%m")
     target_str = target_date.isoformat()
 
@@ -245,6 +258,8 @@ def build_budget_variances(all_transactions: list[dict], budget_rows: list[dict]
             continue
         if (txn["status"] or "").strip().lower() != "posted":
             continue
+        if has_amount_status_mismatch(txn):
+            continue  # never trust a figure the source itself flags as disputed
         amount = parse_amount(txn["amount"])
         if amount is None:
             continue  # never assume zero for an unknown amount
@@ -280,13 +295,28 @@ def build_budget_variances(all_transactions: list[dict], budget_rows: list[dict]
             "material": material,
             "txn_ids": sorted(mtd_txn_ids.get(category, [])),
         })
-    return variances
+
+    # Categories with real posted spend but no Budget Targets row for this
+    # period can't produce a variance at all -- without this, they would
+    # just vanish from the report instead of being flagged. The rest of
+    # the variances above are unaffected and remain trustworthy.
+    orphan_categories = [
+        {
+            "category": category,
+            "mtd_posted": spend,
+            "txn_ids": sorted(mtd_txn_ids[category]),
+        }
+        for category, spend in sorted(mtd_posted.items())
+        if category not in budget_by_category
+    ]
+
+    return {"variances": variances, "orphan_categories": orphan_categories}
 
 
 def build_unresolved_queue(cash_summary: dict) -> dict:
     pending = sorted((t for t, _ in cash_summary["buckets"]["pending"]), key=lambda t: t["transaction_id"])
     disputed = sorted((t for t, _ in cash_summary["buckets"]["disputed"]), key=lambda t: t["transaction_id"])
-    unknown = sorted(cash_summary["unknown_amount"], key=lambda t: t["transaction_id"])
+    unknown = sorted(cash_summary["unknown_amount"], key=lambda item: item[0]["transaction_id"])
     return {"pending": pending, "disputed": disputed, "unknown_amount": unknown}
 
 
@@ -307,6 +337,7 @@ def render_report(
     target_date: dt.date,
     cash_summary: dict,
     variances: list[dict],
+    orphan_categories: list[dict],
     unresolved: dict,
     fetch_meta: dict,
     generated_at: str,
@@ -327,7 +358,10 @@ def render_report(
     lines.append(f"- **Pending:** {fmt_usd(cash_summary['totals']['pending'])} — {pending_ids or 'none'}")
     lines.append(f"- **Disputed:** {fmt_usd(cash_summary['totals']['disputed'])} — {disputed_ids or 'none'}")
     if cash_summary["unknown_amount"]:
-        unk = ", ".join(f"{t['transaction_id']} ({t['status']})" for t in cash_summary["unknown_amount"])
+        unk = ", ".join(
+            f"{t['transaction_id']} ({t['status']}, {reason})"
+            for t, reason in cash_summary["unknown_amount"]
+        )
         lines.append(f"- **Amount Unknown (excluded from totals, escalate):** {unk}")
     lines.append("")
 
@@ -360,6 +394,26 @@ def render_report(
         lines.append("Not material (below one or both thresholds): " + ", ".join(parts) + ".")
     lines.append("")
 
+    lines.append("## Unbudgeted MTD Spend (no matching Budget Targets line)")
+    if orphan_categories:
+        lines.append("| Department | MTD Posted | Transactions |")
+        lines.append("|---|---|---|")
+        for o in orphan_categories:
+            lines.append(
+                f"| {o['category'].title()} | {fmt_usd(o['mtd_posted'])} | {', '.join(o['txn_ids'])} |"
+            )
+        lines.append("")
+        lines.append(
+            "These categories have posted spend for "
+            f"{target_date.strftime('%Y-%m')} but no Budget Targets row for that "
+            "period, so no variance can be calculated for them. The budget "
+            "variances above are unaffected and remain accurate for the "
+            "categories that do have a budget line."
+        )
+    else:
+        lines.append("None — every category with posted spend this month has a matching budget line.")
+    lines.append("")
+
     lines.append("## Unresolved Items Queue (target date)")
     if unresolved["pending"]:
         lines.append("- Pending: " + ", ".join(
@@ -371,7 +425,8 @@ def render_report(
         ))
     if unresolved["unknown_amount"]:
         lines.append("- Amount Unknown — escalate: " + ", ".join(
-            f"{t['transaction_id']} ({t['category']}, {t['status']}, amount blank)" for t in unresolved["unknown_amount"]
+            f"{t['transaction_id']} ({t['category']}, {t['status']}, {reason})"
+            for t, reason in unresolved["unknown_amount"]
         ))
     if not (unresolved["pending"] or unresolved["disputed"] or unresolved["unknown_amount"]):
         lines.append("None.")
@@ -439,7 +494,7 @@ def render_report(
         f"budget {fetch_meta['budget']['row_count']}, "
         f"revenue {fetch_meta['revenue']['row_count']}.*"
     )
-    unk_ids = [t["transaction_id"] for t in unresolved["unknown_amount"]]
+    unk_ids = [t["transaction_id"] for t, _ in unresolved["unknown_amount"]]
     lines.append(
         "5. **Unknown Amounts Excluded:** Did keep unknown-amount transactions in their status "
         "category while excluding them from all numeric sums. "
@@ -519,7 +574,9 @@ def main(argv: list[str] | None = None) -> int:
             )
 
         cash_summary = build_cash_summary(day_transactions)
-        variances = build_budget_variances(transactions, budget, target_date)
+        budget_result = build_budget_variances(transactions, budget, target_date)
+        variances = budget_result["variances"]
+        orphan_categories = budget_result["orphan_categories"]
         unresolved = build_unresolved_queue(cash_summary)
 
         os.makedirs(f"{out_dir}/normalized", exist_ok=True)
@@ -528,7 +585,9 @@ def main(argv: list[str] | None = None) -> int:
         write_csv(f"{out_dir}/normalized/revenue.csv", REVENUE_FIELDS, revenue)
 
         generated_at = dt.datetime.now(dt.timezone.utc).isoformat(timespec="seconds") + "Z"
-        report = render_report(target_date, cash_summary, variances, unresolved, fetched, generated_at)
+        report = render_report(
+            target_date, cash_summary, variances, orphan_categories, unresolved, fetched, generated_at
+        )
         with open(f"{out_dir}/report.md", "w", encoding="utf-8") as handle:
             handle.write(report)
 
