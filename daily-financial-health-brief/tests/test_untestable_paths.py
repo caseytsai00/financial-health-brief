@@ -52,6 +52,10 @@ def run_main(urls: dict[str, str], target_date: str) -> tuple[int, str]:
             "--budget-url", urls["budget"],
             "--revenue-url", urls["revenue"],
             "--target-date", target_date,
+            # Arbitrary but required -- these tests aren't exercising the
+            # comparison-date feature, so a date with no matching rows is
+            # fine; see test_posted_comparison.py for that behavior.
+            "--comparison-date", "2020-01-01",
             "--out-dir", out_dir,
         ]
         stderr = io.StringIO()

@@ -246,6 +246,35 @@ def build_cash_summary(day_transactions: list[dict]) -> dict:
     return {"buckets": buckets, "totals": totals, "unknown_amount": unknown_amount}
 
 
+def build_posted_comparison(
+    all_transactions: list[dict],
+    target_posted_total: Decimal,
+    comparison_date: dt.date,
+) -> dict:
+    """Signed change in Posted cash between --target-date and the required,
+    explicit --comparison-date (see build_cash_summary for why an
+    unrecognized status on either date still blocks the run). A comparison
+    date with zero Transaction Ledger rows doesn't corrupt anything else in
+    the report, so it's flagged rather than failing the run."""
+    comparison_str = comparison_date.isoformat()
+    comparison_day_transactions = [t for t in all_transactions if t["date"] == comparison_str]
+
+    comparison_available = bool(comparison_day_transactions)
+    comparison_total = None
+    signed_change = None
+    if comparison_available:
+        comparison_summary = build_cash_summary(comparison_day_transactions)
+        comparison_total = comparison_summary["totals"]["posted"]
+        signed_change = target_posted_total - comparison_total
+
+    return {
+        "comparison_date": comparison_date,
+        "comparison_available": comparison_available,
+        "comparison_total": comparison_total,
+        "signed_change": signed_change,
+    }
+
+
 def build_budget_variances(all_transactions: list[dict], budget_rows: list[dict], target_date: dt.date) -> dict:
     month_prefix = target_date.strftime("%Y-%m")
     target_str = target_date.isoformat()
@@ -336,6 +365,7 @@ def fmt_pct(value: Decimal | None) -> str:
 def render_report(
     target_date: dt.date,
     cash_summary: dict,
+    posted_comparison: dict,
     variances: list[dict],
     orphan_categories: list[dict],
     unresolved: dict,
@@ -363,6 +393,22 @@ def render_report(
             for t, reason in cash_summary["unknown_amount"]
         )
         lines.append(f"- **Amount Unknown (excluded from totals, escalate):** {unk}")
+    lines.append("")
+
+    lines.append("## Daily Posted Total Comparison")
+    comparison_date = posted_comparison["comparison_date"]
+    lines.append(f"- **{target_date.isoformat()} Posted:** {fmt_usd(cash_summary['totals']['posted'])}")
+    if posted_comparison["comparison_available"]:
+        sign = "+" if posted_comparison["signed_change"] >= 0 else ""
+        lines.append(
+            f"- **{comparison_date.isoformat()} Posted:** {fmt_usd(posted_comparison['comparison_total'])}"
+        )
+        lines.append(f"- **Signed Change:** {sign}{fmt_usd(posted_comparison['signed_change'])}")
+    else:
+        lines.append(
+            f"- **{comparison_date.isoformat()}:** no comparison data available "
+            "(zero Transaction Ledger rows for this date)"
+        )
     lines.append("")
 
     lines.append("## Material Budget Variances (MTD posted spend vs. monthly budget)")
@@ -521,6 +567,15 @@ def parse_args(argv: list[str]) -> argparse.Namespace:
              "relative to the run date (weekends skipped; no holiday calendar).",
     )
     parser.add_argument(
+        "--comparison-date",
+        default=None,
+        help="YYYY-MM-DD to compare --target-date's Posted cash total "
+             "against. Required -- never defaulted or inferred (the Finance "
+             "and Operations Manager uses the exact dates given in each "
+             "request, for financial consistency and alignment with the "
+             "intended review period).",
+    )
+    parser.add_argument(
         "--out-dir",
         default=None,
         help="Deliverables directory. Defaults to <skill-root>/../deliverables.",
@@ -541,6 +596,16 @@ def main(argv: list[str] | None = None) -> int:
     }
 
     try:
+        if not args.comparison_date:
+            raise SafeFailure(
+                "--comparison-date is required (no default). Per the Finance "
+                "and Operations Manager, comparison dates are never inferred "
+                "-- each request must specify the exact date to keep "
+                "financial comparisons aligned with the intended review "
+                "period. Re-run with --comparison-date YYYY-MM-DD."
+            )
+        comparison_date = dt.date.fromisoformat(args.comparison_date)
+
         fetched = fetch_all(urls)
 
         for role in ("transactions", "budget", "revenue"):
@@ -574,6 +639,9 @@ def main(argv: list[str] | None = None) -> int:
             )
 
         cash_summary = build_cash_summary(day_transactions)
+        posted_comparison = build_posted_comparison(
+            transactions, cash_summary["totals"]["posted"], comparison_date
+        )
         budget_result = build_budget_variances(transactions, budget, target_date)
         variances = budget_result["variances"]
         orphan_categories = budget_result["orphan_categories"]
@@ -586,7 +654,8 @@ def main(argv: list[str] | None = None) -> int:
 
         generated_at = dt.datetime.now(dt.timezone.utc).isoformat(timespec="seconds") + "Z"
         report = render_report(
-            target_date, cash_summary, variances, orphan_categories, unresolved, fetched, generated_at
+            target_date, cash_summary, posted_comparison, variances, orphan_categories,
+            unresolved, fetched, generated_at
         )
         with open(f"{out_dir}/report.md", "w", encoding="utf-8") as handle:
             handle.write(report)

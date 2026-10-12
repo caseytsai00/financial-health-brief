@@ -16,6 +16,26 @@ requested.
   or `disputed` blocks the run (needs a human to assign the correct
   category before the brief can be trusted).
 
+## Daily posted-total comparison
+
+- `--comparison-date` is a **required, explicit** argument — never
+  defaulted or inferred from `--target-date` (e.g. "the prior business
+  day"). The manager strictly uses the exact dates specified in each
+  request, for financial consistency and alignment with the intended
+  review period. A missing `--comparison-date` blocks the run the same
+  way a missing source sheet does.
+- The comparison itself is the **signed change** in the Posted total only
+  (`target-date Posted − comparison-date Posted`) — Pending and Disputed
+  are not part of this comparison, consistent with Posted being the only
+  status that represents settled cash (see Month-to-date budget
+  comparison, below).
+- A comparison date with **zero** Transaction Ledger rows does not block
+  the run: it doesn't corrupt any other figure in the report, so it is
+  flagged ("no comparison data available") rather than failing safely.
+  This is deliberately different from `--target-date` having zero rows,
+  which is a "Missing Source of Truth" failure because the whole brief is
+  about that date.
+
 ## Unknown or blank amounts
 
 - A transaction with a blank/unparseable `amount` keeps its status for

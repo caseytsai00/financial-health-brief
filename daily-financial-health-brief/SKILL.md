@@ -50,13 +50,18 @@ From the repository root:
 
 ```bash
 python3 daily-financial-health-brief/scripts/generate_brief.py \
-  --target-date 2026-08-11
+  --target-date 2026-08-11 \
+  --comparison-date 2026-08-10
 ```
 
 - `--target-date YYYY-MM-DD` (optional): the day to brief on. **Defaults to
   the previous business day relative to the run date** (weekends skipped;
   no holiday calendar is encoded — a holiday will need an explicit
   `--target-date` or a future enhancement here).
+- `--comparison-date YYYY-MM-DD` (**required, no default**): the day to
+  compare `--target-date`'s Posted cash total against. Per the Finance and
+  Operations Manager, this is never inferred — missing it is a safe
+  failure, same as a missing source sheet.
 - `--transactions-url` / `--budget-url` / `--revenue-url` (optional):
   override any of the three default Sheet URLs.
 - `--out-dir` (optional): defaults to `deliverables/` at the repository root.
@@ -74,10 +79,12 @@ wall-clock-dependent values baked into the numbers).
   `period, category, budget_amount, currency, owner, review_rule, source, source_version`.
 - `deliverables/normalized/revenue.csv` — every Revenue Snapshot row, columns:
   `date, source, metric, value, currency, source_version`.
-- `deliverables/report.md` — the daily brief: Cash Summary, Material Budget
-  Variances, Unresolved Items Queue, source fetch evidence (URL, spreadsheet
-  ID, tab, fetch timestamp, source_version, row count per sheet),
-  business-rule notes, and a self-checking Definition-of-Done gate.
+- `deliverables/report.md` — the daily brief: Cash Summary, Daily Posted
+  Total Comparison (target vs. comparison date, signed change), Material
+  Budget Variances, Unbudgeted MTD Spend, Unresolved Items Queue, source
+  fetch evidence (URL, spreadsheet ID, tab, fetch timestamp, source_version,
+  row count per sheet), business-rule notes, and a self-checking
+  Definition-of-Done gate.
 
 Fetch evidence (URL / spreadsheet ID / tab / timestamp / source_version /
 row count for each of the three sheets) is also printed to stderr *before*
@@ -100,27 +107,47 @@ untouched) when:
   given).
 - A target-date transaction's `status` isn't one of `posted` / `pending` /
   `disputed` (needs manual categorization before the run can continue).
+- `--comparison-date` is missing (never defaulted or inferred — see
+  [`references/business-rules.md`](references/business-rules.md)).
+
+A `--comparison-date` with **zero** Transaction Ledger rows is different:
+it doesn't fail the run, since it doesn't corrupt anything else in the
+report — it's flagged as "no comparison data available" in the Daily
+Posted Total Comparison section instead.
 
 ### Testing safe-failure paths
 
-Two of the safe-failure checks above are hard to exercise against the real
-sheets, so `tests/` covers them against a local HTTP fixture server instead
-(`tests/fixture_server.py`) — no real sheet access or network needed:
+Several of the checks above are hard to exercise against the real sheets,
+so `tests/` covers them either against a local HTTP fixture server
+(`tests/fixture_server.py`, no real sheet access or network needed) or as
+direct unit tests of the business-logic functions:
 
-- **Bad-status row with a valid amount** — a transaction with a non-blank,
-  parseable `amount` but a `status` outside `posted`/`pending`/`disputed`
-  must raise `SafeFailure`. The amount has to be non-blank: a blank/
-  unparseable amount routes the row to `unknown_amount` *before* the status
-  is ever checked, so a blank-amount version of the same bad status is
-  included as a sanity check that must **not** raise.
-- **Role-mismatch header** — a sheet whose header doesn't fingerprint to
-  any of transactions/budget/revenue must raise `SafeFailure`. No special
-  row is needed; the header alone decides this.
+- **Bad-status row with a valid amount** (`test_untestable_paths.py`) — a
+  transaction with a non-blank, parseable `amount` but a `status` outside
+  `posted`/`pending`/`disputed` must raise `SafeFailure`. The amount has to
+  be non-blank: a blank/unparseable amount routes the row to
+  `unknown_amount` *before* the status is ever checked, so a blank-amount
+  version of the same bad status is included as a sanity check that must
+  **not** raise.
+- **Role-mismatch header** (`test_untestable_paths.py`) — a sheet whose
+  header doesn't fingerprint to any of transactions/budget/revenue must
+  raise `SafeFailure`. No special row is needed; the header alone decides
+  this.
+- **amount_status mismatch and orphan categories**
+  (`test_amount_status_and_orphan_category.py`) — a transaction whose
+  `amount_status` disagrees with whether `amount` actually parses must be
+  excluded from both cash and MTD budget totals; a category with posted
+  spend but no Budget Targets row must appear as an orphan, not silently
+  vanish.
+- **Daily posted-total comparison** (`test_posted_comparison.py`) — a
+  missing `--comparison-date` must raise `SafeFailure` end-to-end; a
+  comparison date with zero rows must be flagged, not failed; the signed
+  change must be `target − comparison` in both directions.
 
 Run from `daily-financial-health-brief/`:
 
 ```
-python3 -m unittest tests.test_untestable_paths -v
+python3 -m unittest discover -s tests -v
 ```
 
 Business rules for what counts as a "material" variance, how unknown
