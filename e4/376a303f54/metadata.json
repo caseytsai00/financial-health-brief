@@ -1,0 +1,29 @@
+{
+  "cli_version": "0.10.2",
+  "checkpoint_id": "e4376a303f54",
+  "strategy": "manual-commit",
+  "branch": "main",
+  "checkpoints_count": 1,
+  "files_touched": [
+    "daily-financial-health-brief/SKILL.md",
+    "daily-financial-health-brief/references/business-rules.md",
+    "daily-financial-health-brief/scripts/generate_brief.py",
+    "daily-financial-health-brief/tests/test_revenue_comparison.py"
+  ],
+  "sessions": [
+    {
+      "metadata": "/e4/376a303f54/0/metadata.json",
+      "transcript": "/e4/376a303f54/0/full.jsonl",
+      "compact_transcript": "/e4/376a303f54/0/transcript.jsonl",
+      "content_hash": "/e4/376a303f54/0/content_hash.txt",
+      "prompt": "/e4/376a303f54/0/prompt.txt"
+    }
+  ],
+  "token_usage": {
+    "input_tokens": 68,
+    "cache_creation_tokens": 36936,
+    "cache_read_tokens": 7974284,
+    "output_tokens": 19063,
+    "api_call_count": 34
+  }
+}
