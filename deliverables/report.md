@@ -41,19 +41,19 @@ Not material (below one or both thresholds): Insurance +$500.00 (16.67%), Market
 ## Unbudgeted MTD Spend (no matching Budget Targets line)
 None — every category with posted spend this month has a matching budget line.
 
-## Unresolved Items Queue (target date)
-- Pending: TX-1010 ($1,250.00), TX-1011 ($900.00), TX-1069 ($500.00)
-- Disputed: TX-1012 ($700.00), TX-1070 ($450.00)
-- Amount Unknown — escalate: TX-1025 (facilities, pending, amount blank)
+## Unresolved Items Queue (month-to-date, 2026-08)
+- Pending: TX-1010 (2026-08-11, $1,250.00), TX-1011 (2026-08-11, $900.00), TX-1017 (2026-08-06, $620.00), TX-1023 (2026-08-10, $275.00), TX-1030 (2026-08-03, $400.00), TX-1040 (2026-08-05, $320.00), TX-1050 (2026-08-07, $275.00), TX-1058 (2026-08-09, $475.00), TX-1064 (2026-08-10, $410.00), TX-1069 (2026-08-11, $500.00)
+- Disputed: TX-1012 (2026-08-11, $700.00), TX-1018 (2026-08-06, $350.00), TX-1034 (2026-08-04, $240.00), TX-1054 (2026-08-08, $85.00), TX-1063 (2026-08-10, $600.00), TX-1070 (2026-08-11, $450.00)
+- Amount Unknown — escalate: TX-1025 (2026-08-11, facilities, pending, amount blank), TX-1045 (2026-08-06, facilities, pending, amount blank)
 
 ---
 
 ## Source Fetch Evidence
-Report generated: 2026-10-12T23:43:09+00:00Z
+Report generated: 2026-10-13T02:13:40+00:00Z
 
-- **Transactions** — `https://docs.google.com/spreadsheets/d/16HhjfR9uG1oUwSFNjQvAvU9Q9gVjzxL0ufBzTJe82v8` (spreadsheet id `16HhjfR9uG1oUwSFNjQvAvU9Q9gVjzxL0ufBzTJe82v8`, default sheet (gid=0)); fetched 2026-10-12T23:43:07+00:00Z; 70 rows; source_version(s): ledger-2026-08-11-v2
-- **Budget** — `https://docs.google.com/spreadsheets/d/1pnHBrxWvZBDIQItyxhmaSUZBxF8VMYqo_fyN7JtgyA4` (spreadsheet id `1pnHBrxWvZBDIQItyxhmaSUZBxF8VMYqo_fyN7JtgyA4`, default sheet (gid=0)); fetched 2026-10-12T23:43:08+00:00Z; 10 rows; source_version(s): budget-2026-08-v3
-- **Revenue** — `https://docs.google.com/spreadsheets/d/1DToTpZtuwtVIdCPethZRe4T-y6mxGpWuivWSmR2XZt4` (spreadsheet id `1DToTpZtuwtVIdCPethZRe4T-y6mxGpWuivWSmR2XZt4`, default sheet (gid=0)); fetched 2026-10-12T23:43:09+00:00Z; 25 rows; source_version(s): revenue-2026-08-03-v1, revenue-2026-08-05-v1, revenue-2026-08-07-v1, revenue-2026-08-10-v1, revenue-2026-08-11-v2
+- **Transactions** — `https://docs.google.com/spreadsheets/d/16HhjfR9uG1oUwSFNjQvAvU9Q9gVjzxL0ufBzTJe82v8` (spreadsheet id `16HhjfR9uG1oUwSFNjQvAvU9Q9gVjzxL0ufBzTJe82v8`, default sheet (gid=0)); fetched 2026-10-13T02:13:39+00:00Z; 70 rows; source_version(s): ledger-2026-08-11-v2
+- **Budget** — `https://docs.google.com/spreadsheets/d/1pnHBrxWvZBDIQItyxhmaSUZBxF8VMYqo_fyN7JtgyA4` (spreadsheet id `1pnHBrxWvZBDIQItyxhmaSUZBxF8VMYqo_fyN7JtgyA4`, default sheet (gid=0)); fetched 2026-10-13T02:13:39+00:00Z; 10 rows; source_version(s): budget-2026-08-v3
+- **Revenue** — `https://docs.google.com/spreadsheets/d/1DToTpZtuwtVIdCPethZRe4T-y6mxGpWuivWSmR2XZt4` (spreadsheet id `1DToTpZtuwtVIdCPethZRe4T-y6mxGpWuivWSmR2XZt4`, default sheet (gid=0)); fetched 2026-10-13T02:13:40+00:00Z; 25 rows; source_version(s): revenue-2026-08-03-v1, revenue-2026-08-05-v1, revenue-2026-08-07-v1, revenue-2026-08-10-v1, revenue-2026-08-11-v2
 
 ## Business-Rule Notes (from stakeholder interview)
 - Starting/closing cash balance reconciliation is intentionally not part of this brief: the Finance and Operations Manager does not net Posted/Pending/Disputed into one cash total, so no starting/closing balance check is performed or expected.
@@ -65,4 +65,4 @@ Report generated: 2026-10-12T23:43:09+00:00Z
 2. **Negative Numbers Preserved:** Did preserve negative values as Credits/Corrections rather than converting to absolute value. *Evidence: TX-1066.*
 3. **Materiality Threshold Strictness:** Did limit "Material Variance" strictly to cases >10% AND >$500. *Evidence: Included — Facilities 21.07%/$885.00; Professional-Services 33.20%/$830.00; Software 21.58%/$561.00; Supplies 36.24%/$1,630.75; Training 100.00%/-$1,500.00. Excluded for failing the strict thresholds — Insurance 16.67%/$500.00; Marketing 10.00%/$600.00; Refunds 38.46%/-$500.00; Staffing 9.86%/$2,070.00; Utilities 12.25%/$220.55.*
 4. **No Assumed Figures:** Did use only exact figures from the freshly fetched sources, zero estimates or placeholders. *Evidence: normalized row counts — transactions 70, budget 10, revenue 25.*
-5. **Unknown Amounts Excluded:** Did keep unknown-amount transactions in their status category while excluding them from all numeric sums. *Evidence: TX-1025.*
+5. **Unknown Amounts Excluded:** Did keep unknown-amount transactions in their status category while excluding them from all numeric sums. *Evidence: TX-1025, TX-1045.*

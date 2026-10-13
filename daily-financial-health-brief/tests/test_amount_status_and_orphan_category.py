@@ -51,7 +51,7 @@ def make_txn(**overrides) -> dict:
 class AmountStatusMismatchTest(unittest.TestCase):
     def test_parseable_amount_declared_unknown_is_excluded_from_cash_totals(self):
         txn = make_txn(transaction_id="TX-A", amount="500.00", amount_status="unknown")
-        summary = build_cash_summary([txn])
+        summary = build_cash_summary([txn], [txn])
 
         self.assertEqual(summary["buckets"]["posted"], [])
         self.assertEqual(summary["totals"]["posted"], Decimal("0"))
@@ -62,7 +62,7 @@ class AmountStatusMismatchTest(unittest.TestCase):
 
     def test_unparseable_amount_declared_confirmed_is_also_a_mismatch(self):
         txn = make_txn(transaction_id="TX-B", amount="not-a-number", amount_status="confirmed")
-        summary = build_cash_summary([txn])
+        summary = build_cash_summary([txn], [txn])
 
         self.assertEqual(summary["totals"]["posted"], Decimal("0"))
         flagged_txn, reason = summary["unknown_amount"][0]
@@ -75,7 +75,7 @@ class AmountStatusMismatchTest(unittest.TestCase):
         # proving the mismatch label above is actually conditioned on a
         # real disagreement, not applied unconditionally.
         txn = make_txn(transaction_id="TX-C", amount="", amount_status="unknown")
-        summary = build_cash_summary([txn])
+        summary = build_cash_summary([txn], [txn])
 
         flagged_txn, reason = summary["unknown_amount"][0]
         self.assertEqual(flagged_txn["transaction_id"], "TX-C")

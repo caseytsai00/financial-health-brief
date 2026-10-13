@@ -222,11 +222,21 @@ def previous_business_day(reference: dt.date) -> dt.date:
     return candidate
 
 
-def build_cash_summary(day_transactions: list[dict]) -> dict:
+def month_to_date_transactions(all_transactions: list[dict], target_date: dt.date) -> list[dict]:
+    """Transaction Ledger rows from the 1st of target_date's month through
+    target_date itself (inclusive) -- the same MTD scoping used for budget
+    variances, reused here for the Unresolved Items Queue and for
+    extending status validation beyond just the single target date."""
+    month_prefix = target_date.strftime("%Y-%m")
+    target_str = target_date.isoformat()
+    return [t for t in all_transactions if t["date"].startswith(month_prefix) and t["date"] <= target_str]
+
+
+def _bucket_and_validate(txns: list[dict]) -> tuple[dict, list]:
     buckets = {status: [] for status in CASH_STATUSES}
     unknown_amount = []
 
-    for txn in day_transactions:
+    for txn in txns:
         status = (txn["status"] or "").strip().lower()
         amount = parse_amount(txn["amount"])
         mismatch = has_amount_status_mismatch(txn)
@@ -242,8 +252,32 @@ def build_cash_summary(day_transactions: list[dict]) -> dict:
             )
         buckets[status].append((txn, amount))
 
-    totals = {status: sum((amt for _, amt in items), Decimal("0")) for status, items in buckets.items()}
-    return {"buckets": buckets, "totals": totals, "unknown_amount": unknown_amount}
+    return buckets, unknown_amount
+
+
+def build_cash_summary(day_transactions: list[dict], month_transactions: list[dict]) -> dict:
+    """Cash totals (Posted/Pending/Disputed $, shown in the Cash Summary
+    section) are scoped strictly to day_transactions -- the target date.
+    Status validation is scoped to the whole month being scanned
+    (month_transactions, a superset that includes day_transactions): a
+    transaction anywhere in that range with an unrecognized status halts
+    the run, not just one dated --target-date. The month-scoped buckets
+    and unknown-amount list feed the Unresolved Items Queue instead of
+    the day-scoped ones, which stay target-date only."""
+    month_buckets, month_unknown_amount = _bucket_and_validate(month_transactions)
+    day_buckets, day_unknown_amount = _bucket_and_validate(day_transactions)
+
+    day_totals = {
+        status: sum((amt for _, amt in items), Decimal("0")) for status, items in day_buckets.items()
+    }
+
+    return {
+        "buckets": day_buckets,
+        "totals": day_totals,
+        "unknown_amount": day_unknown_amount,
+        "month_buckets": month_buckets,
+        "month_unknown_amount": month_unknown_amount,
+    }
 
 
 def build_posted_comparison(
@@ -263,7 +297,7 @@ def build_posted_comparison(
     comparison_total = None
     signed_change = None
     if comparison_available:
-        comparison_summary = build_cash_summary(comparison_day_transactions)
+        comparison_summary = build_cash_summary(comparison_day_transactions, comparison_day_transactions)
         comparison_total = comparison_summary["totals"]["posted"]
         signed_change = target_posted_total - comparison_total
 
@@ -329,14 +363,10 @@ def build_revenue_comparison(
 
 def build_budget_variances(all_transactions: list[dict], budget_rows: list[dict], target_date: dt.date) -> dict:
     month_prefix = target_date.strftime("%Y-%m")
-    target_str = target_date.isoformat()
 
     mtd_posted = defaultdict(lambda: Decimal("0"))
     mtd_txn_ids = defaultdict(list)
-    for txn in all_transactions:
-        date_str = txn["date"]
-        if not date_str.startswith(month_prefix) or date_str > target_str:
-            continue
+    for txn in month_to_date_transactions(all_transactions, target_date):
         if (txn["status"] or "").strip().lower() != "posted":
             continue
         if has_amount_status_mismatch(txn):
@@ -395,9 +425,16 @@ def build_budget_variances(all_transactions: list[dict], budget_rows: list[dict]
 
 
 def build_unresolved_queue(cash_summary: dict) -> dict:
-    pending = sorted((t for t, _ in cash_summary["buckets"]["pending"]), key=lambda t: t["transaction_id"])
-    disputed = sorted((t for t, _ in cash_summary["buckets"]["disputed"]), key=lambda t: t["transaction_id"])
-    unknown = sorted(cash_summary["unknown_amount"], key=lambda item: item[0]["transaction_id"])
+    """Scoped to the whole month being scanned (cash_summary['month_buckets']
+    / ['month_unknown_amount']), not just the target date -- see
+    build_cash_summary."""
+    pending = sorted(
+        (t for t, _ in cash_summary["month_buckets"]["pending"]), key=lambda t: t["transaction_id"]
+    )
+    disputed = sorted(
+        (t for t, _ in cash_summary["month_buckets"]["disputed"]), key=lambda t: t["transaction_id"]
+    )
+    unknown = sorted(cash_summary["month_unknown_amount"], key=lambda item: item[0]["transaction_id"])
     return {"pending": pending, "disputed": disputed, "unknown_amount": unknown}
 
 
@@ -550,18 +587,20 @@ def render_report(
         lines.append("None — every category with posted spend this month has a matching budget line.")
     lines.append("")
 
-    lines.append("## Unresolved Items Queue (target date)")
+    lines.append(f"## Unresolved Items Queue (month-to-date, {target_date.strftime('%Y-%m')})")
     if unresolved["pending"]:
         lines.append("- Pending: " + ", ".join(
-            f"{t['transaction_id']} ({fmt_usd(parse_amount(t['amount']))})" for t in unresolved["pending"]
+            f"{t['transaction_id']} ({t['date']}, {fmt_usd(parse_amount(t['amount']))})"
+            for t in unresolved["pending"]
         ))
     if unresolved["disputed"]:
         lines.append("- Disputed: " + ", ".join(
-            f"{t['transaction_id']} ({fmt_usd(parse_amount(t['amount']))})" for t in unresolved["disputed"]
+            f"{t['transaction_id']} ({t['date']}, {fmt_usd(parse_amount(t['amount']))})"
+            for t in unresolved["disputed"]
         ))
     if unresolved["unknown_amount"]:
         lines.append("- Amount Unknown — escalate: " + ", ".join(
-            f"{t['transaction_id']} ({t['category']}, {t['status']}, {reason})"
+            f"{t['transaction_id']} ({t['date']}, {t['category']}, {t['status']}, {reason})"
             for t, reason in unresolved["unknown_amount"]
         ))
     if not (unresolved["pending"] or unresolved["disputed"] or unresolved["unknown_amount"]):
@@ -728,7 +767,8 @@ def main(argv: list[str] | None = None) -> int:
                 "Re-run with --target-date once the ledger has entries for the intended day."
             )
 
-        cash_summary = build_cash_summary(day_transactions)
+        month_transactions = month_to_date_transactions(transactions, target_date)
+        cash_summary = build_cash_summary(day_transactions, month_transactions)
         posted_comparison = build_posted_comparison(
             transactions, cash_summary["totals"]["posted"], comparison_date
         )

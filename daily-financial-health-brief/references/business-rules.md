@@ -14,7 +14,24 @@ requested.
   "Credit/Correction" — never flipped to positive, never dropped.
 - A transaction whose `status` is anything other than `posted`, `pending`,
   or `disputed` blocks the run (needs a human to assign the correct
-  category before the brief can be trusted).
+  category before the brief can be trusted). This validation applies to
+  **every** Transaction Ledger row in the month-to-date range being
+  scanned for the Unresolved Items Queue (see below) — not only rows
+  dated `--target-date` — so a bad status earlier in the month halts the
+  run just as it would on the target date itself.
+
+## Unresolved Items Queue scope
+
+- The Unresolved Items Queue (Pending, Disputed, Amount Unknown) is scoped
+  to **month-to-date** — the 1st of `--target-date`'s month through
+  `--target-date` itself — reusing the same MTD scoping as the
+  Month-to-date budget comparison below, so an item doesn't drop off the
+  queue just because it isn't dated the target date.
+- The Cash Summary section's dollar totals (Posted/Pending/Disputed)
+  remain scoped to `--target-date` only. These are two different scopes
+  by design: Cash Summary answers "what moved on this specific day,"
+  while the Unresolved Items Queue answers "what in this month still
+  needs a human."
 
 ## Daily posted-total comparison
 

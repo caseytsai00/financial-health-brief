@@ -79,13 +79,15 @@ wall-clock-dependent values baked into the numbers).
   `period, category, budget_amount, currency, owner, review_rule, source, source_version`.
 - `deliverables/normalized/revenue.csv` — every Revenue Snapshot row, columns:
   `date, source, metric, value, currency, source_version`.
-- `deliverables/report.md` — the daily brief: Cash Summary, Daily Posted
-  Total Comparison (target vs. comparison date, signed change), Collected
-  Revenue vs. Outstanding Balance (two independent as-of comparisons —
-  never combined into a ratio), Material Budget Variances, Unbudgeted MTD
-  Spend, Unresolved Items Queue, source fetch evidence (URL, spreadsheet
-  ID, tab, fetch timestamp, source_version, row count per sheet),
-  business-rule notes, and a self-checking Definition-of-Done gate.
+- `deliverables/report.md` — the daily brief: Cash Summary (target-date
+  only), Daily Posted Total Comparison (target vs. comparison date, signed
+  change), Collected Revenue vs. Outstanding Balance (two independent
+  as-of comparisons — never combined into a ratio), Material Budget
+  Variances, Unbudgeted MTD Spend, Unresolved Items Queue
+  (**month-to-date**, not just the target date), source fetch evidence
+  (URL, spreadsheet ID, tab, fetch timestamp, source_version, row count
+  per sheet), business-rule notes, and a self-checking Definition-of-Done
+  gate.
 
 Fetch evidence (URL / spreadsheet ID / tab / timestamp / source_version /
 row count for each of the three sheets) is also printed to stderr *before*
@@ -106,8 +108,11 @@ untouched) when:
   Source of Truth" — most often because the sheet hasn't been updated yet,
   or the default previous-business-day has no data and no override was
   given).
-- A target-date transaction's `status` isn't one of `posted` / `pending` /
-  `disputed` (needs manual categorization before the run can continue).
+- Any transaction's `status` isn't one of `posted` / `pending` /
+  `disputed`, for **any date in the month-to-date range** being scanned
+  for the Unresolved Items Queue (the 1st of `--target-date`'s month
+  through `--target-date`) — not only rows dated `--target-date` itself
+  (needs manual categorization before the run can continue).
 - `--comparison-date` is missing (never defaulted or inferred — see
   [`references/business-rules.md`](references/business-rules.md)).
 
@@ -156,6 +161,13 @@ direct unit tests of the business-logic functions:
   signed change still computes from that fallback; a date before the
   earliest Revenue Snapshot row has no fallback and is flagged unavailable,
   not failed; the two metrics are always reported independently.
+- **Month-to-date Unresolved Items Queue scope**
+  (`test_mtd_unresolved_scope.py`) — Cash Summary totals stay target-date
+  only even when the month scope is larger; the Unresolved Items Queue
+  picks up pending/disputed/unknown-amount items from earlier in the
+  month; a bad status earlier in the month still raises `SafeFailure`; a
+  bad status outside the scanned month (a prior month) does not, since
+  `month_to_date_transactions()` never includes it in the first place.
 
 Run from `daily-financial-health-brief/`:
 
