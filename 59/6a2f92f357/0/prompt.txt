@@ -1,0 +1,1 @@
+scope the Unresolved Items Queue to the current month (reusing the existing MTD month-scoping logic), keep Cash Summary totals scoped to the target date only, and extend build_cash_summary's status validation to the whole month being scanned — a bad status anywhere in that range should halt the run, not just on the target date.
