@@ -589,17 +589,17 @@ def render_report(
 
     lines.append(f"## Unresolved Items Queue (month-to-date, {target_date.strftime('%Y-%m')})")
     if unresolved["pending"]:
-        lines.append("- Pending: " + ", ".join(
+        lines.append("- Pending (Operations owner): " + ", ".join(
             f"{t['transaction_id']} ({t['date']}, {fmt_usd(parse_amount(t['amount']))})"
             for t in unresolved["pending"]
         ))
     if unresolved["disputed"]:
-        lines.append("- Disputed: " + ", ".join(
+        lines.append("- Disputed (Operations owner): " + ", ".join(
             f"{t['transaction_id']} ({t['date']}, {fmt_usd(parse_amount(t['amount']))})"
             for t in unresolved["disputed"]
         ))
     if unresolved["unknown_amount"]:
-        lines.append("- Amount Unknown — escalate: " + ", ".join(
+        lines.append("- Amount Unknown (Operations owner) — escalate: " + ", ".join(
             f"{t['transaction_id']} ({t['date']}, {t['category']}, {t['status']}, {reason})"
             for t, reason in unresolved["unknown_amount"]
         ))

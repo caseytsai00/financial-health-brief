@@ -32,6 +32,11 @@ requested.
   by design: Cash Summary answers "what moved on this specific day,"
   while the Unresolved Items Queue answers "what in this month still
   needs a human."
+- Per the manager, the **Operations owner** is the accountable
+  decision-maker for all three unresolved item types (Pending, Disputed,
+  Amount Unknown) — there is no per-category or per-transaction owner
+  for these (unlike Budget Targets, which does carry an `owner` per
+  category). The report labels all three accordingly.
 
 ## Daily posted-total comparison
 
