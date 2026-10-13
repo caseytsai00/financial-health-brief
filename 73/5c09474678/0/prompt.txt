@@ -1,0 +1,26 @@
+clear to push all three commits (fbefba4, 27eabe4, adc9d06)
+
+---
+
+discard it
+
+---
+
+who is responsible for resolving each type of item in the unresolved queue, and should the report note a specific owner for each one?
+
+---
+
+No I'll check the interview myself.
+
+---
+
+Who is responsible for resolving a Pending, Disputed, or Amount-Unknown transaction — is it the same
+  person who owns that category's budget line, or someone else?
+
+---
+
+No I'll check the interview myself.
+
+---
+
+all three unresolved item types (Pending, Disputed, Amount-Unknown) should be labeled with "Operations owner" as the accountable decision-maker
