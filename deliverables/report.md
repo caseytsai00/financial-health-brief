@@ -8,8 +8,8 @@
 - **Amount Unknown (excluded from totals, escalate):** TX-1025 (pending, amount blank)
 
 ## Daily Posted Total Comparison
-- **2026-08-11 Posted:** $2,750.35
-- **2026-08-10 Posted:** $7,894.50
+- **2026-08-11 Posted:** $2,750.35 (Credit/Correction: TX-1066)
+- **2026-08-10 Posted:** $7,894.50 (Credit/Correction: TX-1060, TX-1062)
 - **Signed Change:** -$5,144.15
 
 ## Collected Revenue vs. Outstanding Balance (as-of comparison)
@@ -49,11 +49,11 @@ None — every category with posted spend this month has a matching budget line.
 ---
 
 ## Source Fetch Evidence
-Report generated: 2026-10-14T00:29:17+00:00Z
+Report generated: 2026-10-14T00:48:15+00:00Z
 
-- **Transactions** — `https://docs.google.com/spreadsheets/d/16HhjfR9uG1oUwSFNjQvAvU9Q9gVjzxL0ufBzTJe82v8` (spreadsheet id `16HhjfR9uG1oUwSFNjQvAvU9Q9gVjzxL0ufBzTJe82v8`, default sheet (gid=0)); fetched 2026-10-14T00:29:16+00:00Z; 70 rows; source_version(s): ledger-2026-08-11-v2
-- **Budget** — `https://docs.google.com/spreadsheets/d/1pnHBrxWvZBDIQItyxhmaSUZBxF8VMYqo_fyN7JtgyA4` (spreadsheet id `1pnHBrxWvZBDIQItyxhmaSUZBxF8VMYqo_fyN7JtgyA4`, default sheet (gid=0)); fetched 2026-10-14T00:29:17+00:00Z; 10 rows; source_version(s): budget-2026-08-v3
-- **Revenue** — `https://docs.google.com/spreadsheets/d/1DToTpZtuwtVIdCPethZRe4T-y6mxGpWuivWSmR2XZt4` (spreadsheet id `1DToTpZtuwtVIdCPethZRe4T-y6mxGpWuivWSmR2XZt4`, default sheet (gid=0)); fetched 2026-10-14T00:29:17+00:00Z; 25 rows; source_version(s): revenue-2026-08-03-v1, revenue-2026-08-05-v1, revenue-2026-08-07-v1, revenue-2026-08-10-v1, revenue-2026-08-11-v2
+- **Transactions** — `https://docs.google.com/spreadsheets/d/16HhjfR9uG1oUwSFNjQvAvU9Q9gVjzxL0ufBzTJe82v8` (spreadsheet id `16HhjfR9uG1oUwSFNjQvAvU9Q9gVjzxL0ufBzTJe82v8`, default sheet (gid=0)); fetched 2026-10-14T00:48:12+00:00Z; 70 rows; source_version(s): ledger-2026-08-11-v2
+- **Budget** — `https://docs.google.com/spreadsheets/d/1pnHBrxWvZBDIQItyxhmaSUZBxF8VMYqo_fyN7JtgyA4` (spreadsheet id `1pnHBrxWvZBDIQItyxhmaSUZBxF8VMYqo_fyN7JtgyA4`, default sheet (gid=0)); fetched 2026-10-14T00:48:12+00:00Z; 10 rows; source_version(s): budget-2026-08-v3
+- **Revenue** — `https://docs.google.com/spreadsheets/d/1DToTpZtuwtVIdCPethZRe4T-y6mxGpWuivWSmR2XZt4` (spreadsheet id `1DToTpZtuwtVIdCPethZRe4T-y6mxGpWuivWSmR2XZt4`, default sheet (gid=0)); fetched 2026-10-14T00:48:15+00:00Z; 25 rows; source_version(s): revenue-2026-08-03-v1, revenue-2026-08-05-v1, revenue-2026-08-07-v1, revenue-2026-08-10-v1, revenue-2026-08-11-v2
 
 ## Business-Rule Notes (from stakeholder interview)
 - Starting/closing cash balance reconciliation is intentionally not part of this brief: the Finance and Operations Manager does not net Posted/Pending/Disputed into one cash total, so no starting/closing balance check is performed or expected.

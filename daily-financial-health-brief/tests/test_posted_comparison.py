@@ -136,6 +136,27 @@ class BuildPostedComparisonTest(unittest.TestCase):
 
         self.assertEqual(result["signed_change"], Decimal("-600.00"))
 
+    def test_negative_posted_amounts_on_the_comparison_date_are_flagged_as_credits(self):
+        # Mirrors how Cash Summary labels negative Posted amounts as
+        # Credit/Correction on the target date -- the comparison date
+        # deserves the same labeling, not just a correct total.
+        all_transactions = [
+            {"transaction_id": "TX-1", "date": "2026-01-02", "status": "posted",
+             "amount": "1000.00", "category": "Insurance", "amount_status": "confirmed"},
+            {"transaction_id": "TX-CREDIT-1", "date": "2026-01-01", "status": "posted",
+             "amount": "-125.50", "category": "Facilities", "amount_status": "confirmed"},
+            {"transaction_id": "TX-CREDIT-2", "date": "2026-01-01", "status": "posted",
+             "amount": "-180.00", "category": "Facilities", "amount_status": "confirmed"},
+            {"transaction_id": "TX-POSITIVE", "date": "2026-01-01", "status": "posted",
+             "amount": "500.00", "category": "Facilities", "amount_status": "confirmed"},
+        ]
+        result = generate_brief.build_posted_comparison(
+            all_transactions, Decimal("1000.00"), dt.date(2026, 1, 1)
+        )
+
+        self.assertEqual(result["comparison_total"], Decimal("194.50"))  # 500 - 125.50 - 180
+        self.assertEqual(set(result["comparison_credit_ids"]), {"TX-CREDIT-1", "TX-CREDIT-2"})
+
     def test_bad_status_on_comparison_date_still_raises_safe_failure(self):
         # Consistency with build_cash_summary's own rule: an unrecognized
         # status blocks the run regardless of which date it's on.

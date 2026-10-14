@@ -296,16 +296,21 @@ def build_posted_comparison(
     comparison_available = bool(comparison_day_transactions)
     comparison_total = None
     signed_change = None
+    comparison_credit_ids = []
     if comparison_available:
         comparison_summary = build_cash_summary(comparison_day_transactions, comparison_day_transactions)
         comparison_total = comparison_summary["totals"]["posted"]
         signed_change = target_posted_total - comparison_total
+        comparison_credit_ids = [
+            t["transaction_id"] for t, amt in comparison_summary["buckets"]["posted"] if amt < 0
+        ]
 
     return {
         "comparison_date": comparison_date,
         "comparison_available": comparison_available,
         "comparison_total": comparison_total,
         "signed_change": signed_change,
+        "comparison_credit_ids": comparison_credit_ids,
     }
 
 
@@ -498,11 +503,16 @@ def render_report(
 
     lines.append("## Daily Posted Total Comparison")
     comparison_date = posted_comparison["comparison_date"]
-    lines.append(f"- **{target_date.isoformat()} Posted:** {fmt_usd(cash_summary['totals']['posted'])}")
+    lines.append(
+        f"- **{target_date.isoformat()} Posted:** {fmt_usd(cash_summary['totals']['posted'])}"
+        + (f" (Credit/Correction: {', '.join(credits)})" if credits else "")
+    )
     if posted_comparison["comparison_available"]:
         sign = "+" if posted_comparison["signed_change"] >= 0 else ""
+        comparison_credits = posted_comparison["comparison_credit_ids"]
         lines.append(
             f"- **{comparison_date.isoformat()} Posted:** {fmt_usd(posted_comparison['comparison_total'])}"
+            + (f" (Credit/Correction: {', '.join(comparison_credits)})" if comparison_credits else "")
         )
         lines.append(f"- **Signed Change:** {sign}{fmt_usd(posted_comparison['signed_change'])}")
     else:
