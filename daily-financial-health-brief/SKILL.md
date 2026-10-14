@@ -178,6 +178,31 @@ Run from `daily-financial-health-brief/`:
 python3 -m unittest discover -s tests -v
 ```
 
+### Disclosure: paths never triggered against the real sheets
+
+The six paths below are exercised by the test suite, but have **never
+actually fired** against the real Transaction Ledger / Budget Targets /
+Revenue Snapshot data this skill runs against. This is stated here
+plainly rather than left for someone to discover — these are tested
+*in case* the data changes, not because they've been observed:
+
+1. **Bad status value** (`test_untestable_paths.py`) — only `posted`,
+   `pending`, and `disputed` have ever appeared in the real data.
+2. **Role-mismatch header** (`test_untestable_paths.py`) — all three real
+   sheets fingerprint correctly by their columns every time.
+3. **`amount_status` mismatch** (`test_amount_status_and_orphan_category.py`)
+   — zero mismatches between `amount_status` and the parsed `amount` have
+   been found in the real data.
+4. **Comparison date with zero rows** (`test_posted_comparison.py`) —
+   2026-08-10, the comparison date used in the committed deliverable, has
+   real Transaction Ledger rows.
+5. **Revenue date before the earliest observation**
+   (`test_revenue_comparison.py`) — the target and comparison dates used
+   so far are within the Revenue Snapshot's known range.
+6. **Orphan category** (`test_amount_status_and_orphan_category.py`) —
+   every real posted-spend category has had a matching Budget Targets
+   row so far.
+
 Business rules for what counts as a "material" variance, how unknown
 amounts and negative values are handled, and which decisions came directly
 from the Finance and Operations Manager are in
