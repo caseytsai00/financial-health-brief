@@ -1,5 +1,5 @@
 # Quillhaven Academy — Daily Financial Health Briefing
-**Target Date:** 2026-08-11 | **Draft for:** Finance and Operations Manager
+**Target Date:** 2026-08-11 | **Draft for:** Finance and Operations Manager | **Prepared for:** Aug 12, 2026 Operations Meeting
 
 ## Cash Summary (target-date transactions)
 - **Posted:** $2,750.35 — TX-1008, TX-1009, TX-1065, TX-1066, TX-1067, TX-1068 (Credit/Correction: TX-1066)
@@ -46,14 +46,20 @@ None — every category with posted spend this month has a matching budget line.
 - Disputed (Operations owner): TX-1012 (2026-08-11, $700.00), TX-1018 (2026-08-06, $350.00), TX-1034 (2026-08-04, $240.00), TX-1054 (2026-08-08, $85.00), TX-1063 (2026-08-10, $600.00), TX-1070 (2026-08-11, $450.00)
 - Amount Unknown (Operations owner) — escalate: TX-1025 (2026-08-11, facilities, pending, amount blank), TX-1045 (2026-08-06, facilities, pending, amount blank)
 
+## Unresolved Items Queue — Limitations
+1. **Snapshot only:** This reflects this run's fetch only. Anything that changes in the Transaction Ledger afterward won't appear here until the next run.
+2. **Informational, not corrective:** This queue doesn't resolve anything itself. The Operations owner has to actually act outside this skill.
+3. **Current month only:** Scoped to the current calendar month. An unresolved item from an earlier month wouldn't appear here at all, even though it's still outstanding.
+4. **amount_status mismatch has a blind spot:** That check only catches a disagreement between the two signals (amount and amount_status). It can't catch a case where both are simply wrong in the same consistent way.
+
 ---
 
 ## Source Fetch Evidence
-Report generated: 2026-10-14T00:48:15+00:00Z
+Report generated: 2026-10-14T05:05:34+00:00Z
 
-- **Transactions** — `https://docs.google.com/spreadsheets/d/16HhjfR9uG1oUwSFNjQvAvU9Q9gVjzxL0ufBzTJe82v8` (spreadsheet id `16HhjfR9uG1oUwSFNjQvAvU9Q9gVjzxL0ufBzTJe82v8`, default sheet (gid=0)); fetched 2026-10-14T00:48:12+00:00Z; 70 rows; source_version(s): ledger-2026-08-11-v2
-- **Budget** — `https://docs.google.com/spreadsheets/d/1pnHBrxWvZBDIQItyxhmaSUZBxF8VMYqo_fyN7JtgyA4` (spreadsheet id `1pnHBrxWvZBDIQItyxhmaSUZBxF8VMYqo_fyN7JtgyA4`, default sheet (gid=0)); fetched 2026-10-14T00:48:12+00:00Z; 10 rows; source_version(s): budget-2026-08-v3
-- **Revenue** — `https://docs.google.com/spreadsheets/d/1DToTpZtuwtVIdCPethZRe4T-y6mxGpWuivWSmR2XZt4` (spreadsheet id `1DToTpZtuwtVIdCPethZRe4T-y6mxGpWuivWSmR2XZt4`, default sheet (gid=0)); fetched 2026-10-14T00:48:15+00:00Z; 25 rows; source_version(s): revenue-2026-08-03-v1, revenue-2026-08-05-v1, revenue-2026-08-07-v1, revenue-2026-08-10-v1, revenue-2026-08-11-v2
+- **Transactions** — `https://docs.google.com/spreadsheets/d/16HhjfR9uG1oUwSFNjQvAvU9Q9gVjzxL0ufBzTJe82v8` (spreadsheet id `16HhjfR9uG1oUwSFNjQvAvU9Q9gVjzxL0ufBzTJe82v8`, default sheet (gid=0)); fetched 2026-10-14T05:05:33+00:00Z; 70 rows; source_version(s): ledger-2026-08-11-v2
+- **Budget** — `https://docs.google.com/spreadsheets/d/1pnHBrxWvZBDIQItyxhmaSUZBxF8VMYqo_fyN7JtgyA4` (spreadsheet id `1pnHBrxWvZBDIQItyxhmaSUZBxF8VMYqo_fyN7JtgyA4`, default sheet (gid=0)); fetched 2026-10-14T05:05:34+00:00Z; 10 rows; source_version(s): budget-2026-08-v3
+- **Revenue** — `https://docs.google.com/spreadsheets/d/1DToTpZtuwtVIdCPethZRe4T-y6mxGpWuivWSmR2XZt4` (spreadsheet id `1DToTpZtuwtVIdCPethZRe4T-y6mxGpWuivWSmR2XZt4`, default sheet (gid=0)); fetched 2026-10-14T05:05:34+00:00Z; 25 rows; source_version(s): revenue-2026-08-03-v1, revenue-2026-08-05-v1, revenue-2026-08-07-v1, revenue-2026-08-10-v1, revenue-2026-08-11-v2
 
 ## Business-Rule Notes (from stakeholder interview)
 - Starting/closing cash balance reconciliation is intentionally not part of this brief: the Finance and Operations Manager does not net Posted/Pending/Disputed into one cash total, so no starting/closing balance check is performed or expected.

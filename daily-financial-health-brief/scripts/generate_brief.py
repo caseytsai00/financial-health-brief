@@ -480,7 +480,10 @@ def render_report(
 ) -> str:
     lines = []
     lines.append("# Quillhaven Academy — Daily Financial Health Briefing")
-    lines.append(f"**Target Date:** {target_date.isoformat()} | **Draft for:** Finance and Operations Manager")
+    lines.append(
+        f"**Target Date:** {target_date.isoformat()} | **Draft for:** Finance and Operations "
+        "Manager | **Prepared for:** Aug 12, 2026 Operations Meeting"
+    )
     lines.append("")
     lines.append("## Cash Summary (target-date transactions)")
     posted_ids = ", ".join(t["transaction_id"] for t, _ in cash_summary["buckets"]["posted"])
@@ -615,6 +618,30 @@ def render_report(
         ))
     if not (unresolved["pending"] or unresolved["disputed"] or unresolved["unknown_amount"]):
         lines.append("None.")
+    lines.append("")
+
+    lines.append("## Unresolved Items Queue — Limitations")
+    lines.append(
+        "1. **Snapshot only:** This reflects this run's fetch only. Anything "
+        "that changes in the Transaction Ledger afterward won't appear "
+        "here until the next run."
+    )
+    lines.append(
+        "2. **Informational, not corrective:** This queue doesn't resolve "
+        "anything itself. The Operations owner has to actually act outside "
+        "this skill."
+    )
+    lines.append(
+        "3. **Current month only:** Scoped to the current calendar month. "
+        "An unresolved item from an earlier month wouldn't appear here at "
+        "all, even though it's still outstanding."
+    )
+    lines.append(
+        "4. **amount_status mismatch has a blind spot:** That check only "
+        "catches a disagreement between the two signals (amount and "
+        "amount_status). It can't catch a case where both are simply "
+        "wrong in the same consistent way."
+    )
     lines.append("")
 
     lines.append("---")
