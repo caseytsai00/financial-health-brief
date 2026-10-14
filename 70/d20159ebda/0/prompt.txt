@@ -1,0 +1,6 @@
+push it
+
+---
+
+the determinism claim in SKILL.md should also mention
+  --comparison-date needs to stay the same for a byte-identical rerun, since it's a required parameter that affects the output.
