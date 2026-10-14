@@ -66,10 +66,13 @@ python3 daily-financial-health-brief/scripts/generate_brief.py \
   override any of the three default Sheet URLs.
 - `--out-dir` (optional): defaults to `deliverables/` at the repository root.
 
-Re-running with the same source snapshot and the same `--target-date`
-produces byte-for-byte identical `report.md` content (all aggregation uses
-`Decimal` arithmetic and sorted iteration order — no floating point, no
-wall-clock-dependent values baked into the numbers).
+Re-running with the same source snapshot and the same `--target-date` and
+`--comparison-date` produces byte-for-byte identical `report.md` content
+(all aggregation uses `Decimal` arithmetic and sorted iteration order — no
+floating point, no wall-clock-dependent values baked into the numbers).
+`--comparison-date` is required and affects the output (Daily Posted
+Total Comparison, Collected Revenue vs. Outstanding Balance), so it has
+to match too, not just `--target-date`.
 
 ## Outputs
 
