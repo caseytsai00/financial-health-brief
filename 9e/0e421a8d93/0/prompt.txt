@@ -1,0 +1,5 @@
+push it
+
+---
+
+I found a bug: line 672's unk_ids now pulls month-scoped data but the wording still says "target date," inconsistent with items #1 and #2 which are correctly target-date-scoped. The fix should update DoD item #5's wording to honestly say "month-to-date" (matching how the Unresolved Items Queue section header above it already reads), including fixing the stale "none present on target date" fallback text.
