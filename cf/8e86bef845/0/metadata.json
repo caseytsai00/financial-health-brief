@@ -1,0 +1,68 @@
+{
+  "cli_version": "0.10.2",
+  "checkpoint_id": "cf8e86bef845",
+  "session_id": "aa810533-b10a-47e5-b439-3b08d14bb6c5",
+  "strategy": "manual-commit",
+  "created_at": "2026-10-14T05:09:54.438546Z",
+  "branch": "main",
+  "checkpoints_count": 3,
+  "save_step_count": 1,
+  "files_touched": [
+    "daily-financial-health-brief/scripts/generate_brief.py",
+    "deliverables/report.md"
+  ],
+  "agent": "Claude Code",
+  "model": "claude-sonnet-5",
+  "turn_id": "0c22d8731ad8",
+  "checkpoint_transcript_start": 1700,
+  "transcript_lines_at_start": 1700,
+  "compact_transcript_start": 369,
+  "token_usage": {
+    "input_tokens": 30,
+    "cache_creation_tokens": 312739,
+    "cache_read_tokens": 4815845,
+    "output_tokens": 3888,
+    "api_call_count": 15
+  },
+  "session_metrics": {
+    "turn_count": 48
+  },
+  "initial_attribution": {
+    "calculated_at": "2026-10-14T05:09:54.367545Z",
+    "agent_lines": 31,
+    "agent_removed": 2,
+    "human_added": 0,
+    "human_modified": 0,
+    "human_removed": 4,
+    "total_committed": 31,
+    "total_lines_changed": 37,
+    "agent_percentage": 89.1891891891892,
+    "metric_version": 2
+  },
+  "prompt_attributions": [
+    {
+      "checkpoint_number": 1,
+      "user_lines_added": 88,
+      "user_lines_removed": 4,
+      "agent_lines_added": 0,
+      "agent_lines_removed": 0,
+      "user_added_per_file": {
+        ".claude/settings.json": 84,
+        "deliverables/report.md": 4
+      },
+      "user_removed_per_file": {
+        "deliverables/report.md": 4
+      }
+    },
+    {
+      "checkpoint_number": 2,
+      "user_lines_added": 84,
+      "user_lines_removed": 0,
+      "agent_lines_added": 39,
+      "agent_lines_removed": 6,
+      "user_added_per_file": {
+        ".claude/settings.json": 84
+      }
+    }
+  ]
+}

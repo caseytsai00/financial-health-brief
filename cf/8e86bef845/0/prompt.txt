@@ -1,0 +1,5 @@
+push
+
+---
+
+Add context to the report's header/intro that this brief is prepared for the Aug 12, 2026 operations meeting, alongside the existing target date and audience. Also add a section near the Unresolved Items Queue stating its limitations: 1. It is a snapshot of this run's fetch only,anything that changes in the ledger afterward won't appear until the next run.  2. It doesn't resolve anything itself — it's informational only; the Operations owner has to actually act outside this skill. 3. It's scoped to the current calendar month only, an unresolved item from an earlier month wouldn't appear here at all, even though it's still outstanding. 4.The amount_status mismatch check can only catch a disagreement between two signals — it can't catch a case where both the amount and its status are simply wrong in the same consistent way.                                                                Add both pieces to report.md, regenerate it, and show me the diff before commit
