@@ -673,7 +673,7 @@ def render_report(
     lines.append(
         "5. **Unknown Amounts Excluded:** Did keep unknown-amount transactions in their status "
         "category while excluding them from all numeric sums. "
-        f"*Evidence: {', '.join(unk_ids) if unk_ids else 'none present on target date'}.*"
+        f"*Evidence (month-to-date): {', '.join(unk_ids) if unk_ids else 'none present month-to-date'}.*"
     )
     lines.append("")
 
