@@ -1,0 +1,2 @@
+Both negative transactions — TX-1060 (-$125.50, "damaged goods credit") and TX-1062 (-$180.00, "repair invoice correction") — are dated 2026-08-10, the comparison date. The math is correct, but nowhere in the report are these two transactions called out as credits — unlike the target date, where Cash Summary explicitly labels "(Credit/Correction: TX-1066)". Have it add the same labeling to both lines of the Daily Posted Total Comparison section — showing which transactions on each date are credits, consistent with how Cash Summary
+  already does it.
