@@ -1,0 +1,26 @@
+{
+  "cli_version": "0.10.2",
+  "checkpoint_id": "cfcb8ed7a80f",
+  "strategy": "manual-commit",
+  "branch": "main",
+  "checkpoints_count": 2,
+  "files_touched": [
+    "daily-financial-health-brief/SKILL.md"
+  ],
+  "sessions": [
+    {
+      "metadata": "/cf/cb8ed7a80f/0/metadata.json",
+      "transcript": "/cf/cb8ed7a80f/0/full.jsonl",
+      "compact_transcript": "/cf/cb8ed7a80f/0/transcript.jsonl",
+      "content_hash": "/cf/cb8ed7a80f/0/content_hash.txt",
+      "prompt": "/cf/cb8ed7a80f/0/prompt.txt"
+    }
+  ],
+  "token_usage": {
+    "input_tokens": 14,
+    "cache_creation_tokens": 3517,
+    "cache_read_tokens": 2349156,
+    "output_tokens": 1745,
+    "api_call_count": 7
+  }
+}

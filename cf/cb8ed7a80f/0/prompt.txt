@@ -1,0 +1,6 @@
+Add a disclosure section to SKILL.md, right near the existing "Testing safe-failure paths" section, listing each of the six paths that are unit-tested but never actually triggered by the real live sheets:  1. Bad status value (only posted/pending/disputed ever appear in the real data)
+  2. Role-mismatch header (all three real sheets fingerprint correctly every time)
+  3. amount_status mismatch (zero mismatches found in the real data)
+  4. Comparison-date with zero rows (2026-08-10 has real data) 
+  5. Revenue date-before-earliest-observation (target/comparison dates are within the known range)
+  6. Orphan category (every real spend category has a matching budget line)  Each should note it's covered by a specific test file, and explicitly state it's never fired against the real sheets — honest, not hidden.
