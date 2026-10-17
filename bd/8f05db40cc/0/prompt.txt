@@ -1,0 +1,5 @@
+push
+
+---
+
+I found that fetch_sheet() hardcodes the tab identity as "default sheet (gid=0)" whenever no gid is in the input URL, but I verified gid=0 doesn't actually exist on any of the three real sheets (all return HTTP 400) — the real gids are 386574278, 1184198158, and 653526310 respectively, discoverable by fetching each sheet's /htmlview page and extracting the gid= value referenced there. I want it to actually discover and report the real gid instead of asserting a wrong default.
