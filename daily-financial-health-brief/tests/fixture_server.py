@@ -34,6 +34,13 @@ class FixtureServer:
     "/export" suffix and query string before matching, so the route key
     stays exactly the URL you handed to generate_brief.
 
+    When a route's URL has no gid, generate_brief also fetches
+    "<base>/htmlview" to discover one (see discover_default_gid()). This
+    server answers any such request for a registered route with a fixed
+    fake gid ("0") -- real content doesn't matter here, only that the
+    request resolves against this same fixture host instead of real
+    Google Sheets.
+
     Usage:
         with FixtureServer({"/t/d/TXN1": ("text/csv", b"a,b\\n1,2\\n")}) as server:
             url = server.url("/t/d/TXN1")
@@ -66,7 +73,17 @@ class FixtureServer:
 def _make_handler(routes: dict[str, tuple[str, bytes]]):
     class Handler(http.server.BaseHTTPRequestHandler):
         def do_GET(self) -> None:  # noqa: N802 (stdlib method name)
-            path = urllib.parse.urlsplit(self.path).path
+            raw_path = urllib.parse.urlsplit(self.path).path
+            if raw_path.endswith("/htmlview"):
+                base_path = raw_path[: -len("/htmlview")]
+                if base_path in routes:
+                    self._respond("text/html", b'initialSheet: ("0" == gid)')
+                else:
+                    self.send_response(404)
+                    self.end_headers()
+                return
+
+            path = raw_path
             if path.endswith("/export"):
                 path = path[: -len("/export")]
             route = routes.get(path)
@@ -75,6 +92,9 @@ def _make_handler(routes: dict[str, tuple[str, bytes]]):
                 self.end_headers()
                 return
             content_type, body = route
+            self._respond(content_type, body)
+
+        def _respond(self, content_type: str, body: bytes) -> None:
             self.send_response(200)
             self.send_header("Content-Type", content_type)
             self.send_header("Content-Length", str(len(body)))

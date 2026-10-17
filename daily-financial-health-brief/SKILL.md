@@ -32,13 +32,22 @@ never a bundled, downloaded, or previously cached CSV:
 | Revenue Snapshot | `https://docs.google.com/spreadsheets/d/1DToTpZtuwtVIdCPethZRe4T-y6mxGpWuivWSmR2XZt4` |
 
 Each URL is converted to its CSV export endpoint
-(`.../export?format=csv[&gid=…]`) and fetched fresh. The skill does **not**
+(`.../export?format=csv&gid=…`) and fetched fresh. The skill does **not**
 trust the URL's declared role or argument position: it fingerprints each
 fetched sheet's header row and assigns a role by the columns actually present
 (`transaction_id`+`amount`+`status` → transactions; `budget_amount`+`period`
 → budget; `metric`+`value` → revenue). This keeps the run correct even if
 column order, source names, or extra columns change, or if two URLs are
 passed out of order.
+
+If a URL omits `gid`, the skill does **not** assume `gid=0` for the
+default tab — that gid doesn't exist on any of the three real sheets
+(each returns HTTP 400 if explicitly requested). Instead,
+`discover_default_gid()` fetches the sheet's `/htmlview` page and parses
+the gid it actually marks as the default/initial tab, failing safely if
+it can't be found rather than guessing. The discovered gid is reported in
+both the `report.md` fetch evidence and the stderr `[fetch-evidence]`
+line as `tab=gid=<n>`.
 
 The three URLs are overridable — pass different Sheet URLs (e.g. a test
 fixture, or next month's sheets) via `--transactions-url`, `--budget-url`,
@@ -107,6 +116,9 @@ untouched) when:
   that isn't a plain CSV (wrong content-type, or an HTML/sign-in page —
   usually a sharing-permission problem), or its header doesn't fingerprint
   to any known role.
+- A URL without an explicit gid can't have its default tab's real gid
+  discovered from `/htmlview` (fetch failure, or the page doesn't mark an
+  initial-sheet gid) — the script never assumes `gid=0`.
 - The Transaction Ledger has zero rows dated `--target-date` ("Missing
   Source of Truth" — most often because the sheet hasn't been updated yet,
   or the default previous-business-day has no data and no override was
@@ -171,6 +183,12 @@ direct unit tests of the business-logic functions:
   month; a bad status earlier in the month still raises `SafeFailure`; a
   bad status outside the scanned month (a prior month) does not, since
   `month_to_date_transactions()` never includes it in the first place.
+- **Default-tab gid discovery** (`test_gid_discovery.py`) — a sheet URL
+  without an explicit gid must discover the real one from `/htmlview`
+  (not assume `gid=0`); discovery queries the sheet's own host, not a
+  hardcoded `docs.google.com`, which is what makes this testable against
+  a local fixture at all; an unregistered/unreachable sheet raises
+  `SafeFailure` rather than guessing a gid.
 
 Run from `daily-financial-health-brief/`:
 

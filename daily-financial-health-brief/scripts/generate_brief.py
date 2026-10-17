@@ -76,6 +76,49 @@ def export_csv_url(sheet_url: str) -> tuple[str, str]:
     return url, sheet_id
 
 
+def discover_default_gid(base: str, sheet_id: str, timeout: int = 20) -> str:
+    """Discovers the real gid of a spreadsheet's default (first) tab by
+    fetching its /htmlview page and parsing the gid it marks as the
+    initial sheet. Google's CSV export endpoint silently serves this tab
+    when a URL omits gid, but never says which gid that actually is --
+    and gid=0 is not a safe assumption: it returns HTTP 400 on every real
+    sheet this skill reads. Raises SafeFailure rather than guessing.
+
+    `base` is the same scheme+host+path prefix export_csv_url() derived
+    from the original sheet_url (not a hardcoded docs.google.com), so a
+    local test fixture is queried on its own host, same as the CSV fetch."""
+    htmlview_url = f"{base}/htmlview"
+    request = urllib.request.Request(
+        htmlview_url, headers={"User-Agent": "quillhaven-financial-brief/1.1"}
+    )
+    try:
+        with urllib.request.urlopen(request, timeout=timeout, context=_SSL_CONTEXT) as response:
+            status = response.status
+            raw = response.read()
+    except (urllib.error.HTTPError, urllib.error.URLError) as exc:
+        raise SafeFailure(
+            f"Could not discover the default tab's gid for spreadsheet {sheet_id}: "
+            f"fetching {htmlview_url} failed ({exc}). Refusing to assume gid=0 or "
+            "any other guessed value."
+        ) from exc
+
+    if status != 200:
+        raise SafeFailure(
+            f"Could not discover the default tab's gid for spreadsheet {sheet_id}: "
+            f"{htmlview_url} returned HTTP {status}."
+        )
+
+    text = raw.decode("utf-8", errors="replace")
+    match = re.search(r'initialSheet:\s*\("(\d+)"\s*==\s*gid\)', text)
+    if not match:
+        raise SafeFailure(
+            f"Could not discover the default tab's gid for spreadsheet {sheet_id}: "
+            f"no initial-sheet gid found in {htmlview_url}. Refusing to assume gid=0 "
+            "or any other guessed value."
+        )
+    return match.group(1)
+
+
 def fetch_sheet(sheet_url: str, timeout: int = 20) -> dict:
     """Freshly GET a Google Sheet as CSV and validate it is real tabular data.
 
@@ -83,6 +126,9 @@ def fetch_sheet(sheet_url: str, timeout: int = 20) -> dict:
     SafeFailure and the run stops before touching deliverables.
     """
     export_url, sheet_id = export_csv_url(sheet_url)
+    if "gid=" not in export_url:
+        base = export_url.split("/export?format=csv")[0]
+        export_url += f"&gid={discover_default_gid(base, sheet_id, timeout=timeout)}"
     request = urllib.request.Request(
         export_url, headers={"User-Agent": "quillhaven-financial-brief/1.1"}
     )
@@ -132,7 +178,7 @@ def fetch_sheet(sheet_url: str, timeout: int = 20) -> dict:
         "sheet_url": sheet_url,
         "spreadsheet_id": sheet_id,
         "export_url": export_url,
-        "tab_identity": "default sheet (gid=0)" if "gid=" not in export_url else export_url.split("gid=")[-1],
+        "tab_identity": f"gid={export_url.split('gid=')[-1]}",
         "fetched_at": dt.datetime.now(dt.timezone.utc).isoformat(timespec="seconds") + "Z",
         "row_count": len(rows),
         "header": header,
